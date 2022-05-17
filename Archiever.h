@@ -20,8 +20,8 @@ public:
 
 class Archiever {
 public:
-    static ustring simple_archieve(const ustring& DATA);
-    static ustring effective_archieve(const ustring& DATA);
+    static std::vector<ustring> simple_archieve(const ustring& DATA);
+    static std::vector<ustring> effective_archieve(const ustring& DATA);
 
 private:
     static std::vector<ustring> parallel_compression(const ustring& DATA, const std::size_t BLOCK_SIZE = 64);
