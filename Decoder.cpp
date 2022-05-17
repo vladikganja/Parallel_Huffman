@@ -11,7 +11,7 @@ void Decoder::unzip() {
 
 }
 
-const std::vector<decode_node>& Decoder::restore_tree(ustring inzip_buffer, std::size_t hash_size) {
+const std::vector<decode_node> Decoder::restore_tree(ustring inzip_buffer, std::size_t hash_size) {
     int count = 0;
     int size = 0;
 

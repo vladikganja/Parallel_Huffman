@@ -16,6 +16,6 @@ class Decoder {
 public:
     static void unzip();
 private:
-    static const std::vector<decode_node>& restore_tree(ustring inzip_buffer, std::size_t hash_size);
+    static const std::vector<decode_node> restore_tree(ustring inzip_buffer, std::size_t hash_size);
 };
 
