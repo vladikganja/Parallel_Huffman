@@ -22,7 +22,7 @@ std::vector<ustring> Archiever::effective_archieve(const ustring& DATA) {
 
 std::vector<ustring> Archiever::parallel_compression(const ustring& DATA, const std::size_t BLOCK_SIZE) {
 
-    std::vector<ustring> _chunks_(static_cast<std::size_t>(DATA.size() / (BLOCK_SIZE * 256)) + 1,
+    std::vector<ustring> _chunks_(static_cast<std::size_t>(DATA.size() / (BLOCK_SIZE * 1024)) + 1,
                          ustring(Utils::META_RESERVED, '\0'));
     _chunks_[0][0] = static_cast<unsigned char>(BLOCK_SIZE & 255);
     _chunks_[0].resize(Utils::META_RESERVED + 1);
@@ -71,12 +71,13 @@ std::vector<ustring> Archiever::parallel_compression(const ustring& DATA, const 
             _chunks_[chunk].push_back(buf);
 
             // META FILLING ///////////////////////////////////
-            _chunks_[chunk][0] = static_cast<unsigned char>(size >> 8);
-            _chunks_[chunk][1] = static_cast<unsigned char>(size & 255);
-            _chunks_[chunk][2] = static_cast<unsigned char>((_chunks_[chunk].size() - Utils::META_RESERVED - size) >> 16);
-            _chunks_[chunk][3] = static_cast<unsigned char>((_chunks_[chunk].size() - Utils::META_RESERVED - size) >> 8);
-            _chunks_[chunk][4] = static_cast<unsigned char>((_chunks_[chunk].size() - Utils::META_RESERVED - size) & 255);
-            _chunks_[chunk][5] = static_cast<unsigned char>(count);
+            std::size_t fbofs = static_cast<std::size_t>(!chunk); // first bit offset
+            _chunks_[chunk][0 + fbofs] = static_cast<unsigned char>(size >> 8);
+            _chunks_[chunk][1 + fbofs] = static_cast<unsigned char>(size & 255);
+            _chunks_[chunk][2 + fbofs] = static_cast<unsigned char>((_chunks_[chunk].size() - Utils::META_RESERVED - size) >> 16);
+            _chunks_[chunk][3 + fbofs] = static_cast<unsigned char>((_chunks_[chunk].size() - Utils::META_RESERVED - size) >> 8);
+            _chunks_[chunk][4 + fbofs] = static_cast<unsigned char>((_chunks_[chunk].size() - Utils::META_RESERVED - size) & 255);
+            _chunks_[chunk][5 + fbofs] = static_cast<unsigned char>(count);
             ///////////////////////////////////////////////////
         }
     };

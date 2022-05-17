@@ -44,7 +44,7 @@ void Parallel_Huffman::archieve() {
     auto open_start = std::chrono::high_resolution_clock::now();
     input_file.seekg(0, std::ios::end);
     size_t size = input_file.tellg();
-    std::string s(size, ' ');
+    std::string s(size, '\0');
     input_file.seekg(0);
     ustring DATA(size, '\0');
     input_file.read(&DATA[0], size);
