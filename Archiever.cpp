@@ -10,27 +10,22 @@ encode_node::encode_node(int _weight, unsigned char _ch) : weight(_weight), ch(_
 
 // ARCHIEVING /////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-ustring Archiever::simple_archieve(const ustring& DATA) {
-    std::vector<ustring> parallel_compressed_data = parallel_compression(DATA);
-    ustring united_compressed_data;
-    united_compressed_data.reserve(DATA.size());
-    united_compressed_data.push_back(64);
-    for (auto& x : parallel_compressed_data) {
-        united_compressed_data += x;
-    }
-    return united_compressed_data;
+std::vector<ustring> Archiever::simple_archieve(const ustring& DATA) {
+    return parallel_compression(DATA);
 }
 
-ustring Archiever::effective_archieve(const ustring& DATA) {
-    return ustring();
+std::vector<ustring> Archiever::effective_archieve(const ustring& DATA) {
+    return std::vector<ustring>();
 }
 
 // IMPL ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 std::vector<ustring> Archiever::parallel_compression(const ustring& DATA, const std::size_t BLOCK_SIZE) {
 
-    std::vector<ustring> _chunks_(DATA.size() / (BLOCK_SIZE * 256) + 1,
+    std::vector<ustring> _chunks_(static_cast<std::size_t>(DATA.size() / (BLOCK_SIZE * 256)) + 1,
                          ustring(Utils::META_RESERVED, '\0'));
+    _chunks_[0][0] = static_cast<unsigned char>(BLOCK_SIZE & 255);
+    _chunks_[0].resize(Utils::META_RESERVED + 1);
     std::size_t threads_amount = std::thread::hardware_concurrency();
     std::vector<std::thread> _threads_(threads_amount);
     std::mutex _mtx_;
@@ -42,7 +37,7 @@ std::vector<ustring> Archiever::parallel_compression(const ustring& DATA, const 
         thread_local std::size_t _thread = thread;
         ++thread;
         _mtx_.unlock();
-        for (std::size_t chunk = _thread; chunk * BLOCK_SIZE * 1024 < DATA.size(); chunk += 16) {
+        for (std::size_t chunk = _thread; chunk * BLOCK_SIZE * 1024 < DATA.size(); chunk += threads_amount) {
             std::size_t offset = chunk * BLOCK_SIZE * 1024;
             if (offset > DATA.size())
                 break;

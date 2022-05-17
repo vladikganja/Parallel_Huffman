@@ -9,8 +9,8 @@ void Parallel_Huffman::archieve() {
 
     while (true) {
         std::cout << "Enter the input file name\n";
-        std::cin >> input;
-        input_file.open(input, std::ios::binary);
+        //std::cin >> input;
+        input_file.open("../tests/t1.txt", std::ios::binary);
         if (!input_file.is_open()) {
             std::cout << "Not found\n";
             continue;
@@ -23,8 +23,8 @@ void Parallel_Huffman::archieve() {
 
     while (true) {
         std::cout << "Enter the output file name\n";
-        std::cin >> output;
-        output_file.open(output, std::ios::binary);
+        //std::cin >> output;
+        output_file.open("../tests/td1.txt", std::ios::binary);
 
         if (!output_file.is_open()) {
             std::cout << "Not found\n";
@@ -41,35 +41,46 @@ void Parallel_Huffman::archieve() {
     std::cin >> mode;
     /////////////////////////////////////////////////////////////////////////////
 
-    usstream _str_stream_;
-    _str_stream_ << input_file.rdbuf();
-    ustring DATA = _str_stream_.str();
-    ustring COMPRESSED_DATA;
+    auto open_start = std::chrono::high_resolution_clock::now();
+    input_file.seekg(0, std::ios::end);
+    size_t size = input_file.tellg();
+    std::string s(size, ' ');
+    input_file.seekg(0);
+    ustring DATA(size, '\0');
+    input_file.read(&DATA[0], size);
+    auto open_end = std::chrono::high_resolution_clock::now();
 
-    // ARCHIEVING WITH METRICS ////////////////////////////////////////////////
+    std::vector<ustring> PARALLEL_COMPRESSED_DATA;
+
+    // ARCHIEVING /////////////////////////////////////////////////////////////
     std::cout << "====================Encoding started====================\n";
-    auto start = std::chrono::high_resolution_clock::now();
+    auto enc_start = std::chrono::high_resolution_clock::now();
 
     if (mode == "y")
-        COMPRESSED_DATA = Archiever::effective_archieve(DATA);
+        PARALLEL_COMPRESSED_DATA = Archiever::effective_archieve(DATA);
     else
-        COMPRESSED_DATA = Archiever::simple_archieve(DATA);
+        PARALLEL_COMPRESSED_DATA = Archiever::simple_archieve(DATA);
 
-    auto end = std::chrono::high_resolution_clock::now();
+    auto enc_end = std::chrono::high_resolution_clock::now();
     ///////////////////////////////////////////////////////////////////////////
 
-    output_file << COMPRESSED_DATA;
-
     std::size_t total_read_bytes = DATA.size();
-    std::size_t total_written_bytes = COMPRESSED_DATA.size();
+    std::size_t total_written_bytes = 0;
 
-    std::chrono::duration<double> diff = end - start;
+    for (auto& x : PARALLEL_COMPRESSED_DATA) {
+        output_file << x;
+        total_written_bytes += x.size();
+    }
+
+    std::chrono::duration<double> open_diff = open_end - open_start;
+    std::chrono::duration<double> enc_diff = enc_end - enc_start;
     std::cout.precision(6);
     std::cout << GRN << "Successful archiving!\n";
     std::cout << std::fixed << WHT << "Bytes read: " << GRN << total_read_bytes << WHT << "\nBytes written: " << GRN << total_written_bytes <<
         WHT << "\nFile compression: " << GRN << static_cast<double>(total_read_bytes - total_written_bytes) * 100.0 / total_read_bytes << "%\n";
 
-    std::cout << WHT << "Archiving: " << GRN << diff.count() << " sec\n" << WHT;
+    std::cout << WHT << "Opening: " << GRN << open_diff.count() << " sec\n" << WHT;
+    std::cout << WHT << "Archiving: " << GRN << enc_diff.count() << " sec\n" << WHT;
     std::cout << "====================Encoding ended====================\n\n";
 
     input_file.close();
